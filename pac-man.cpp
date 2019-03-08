@@ -10,43 +10,55 @@ using namespace std;
 /**********************************************
 	X	 obstacles
 	#	 enemy
-	*    player
+	A    player
 	o    small fruit
 	0    large fruit
-    n/2 =enemy.
     enemy even horizantal mov
-    odd than vertical
-    toggle left right & top down.
+    odd then move vertical
 ************************************************/
 static int score=0;
 	char a[n][m]={
-	{'A',' ',' ','X','X','o',' ',' ',' ',' ',' ',' ',' ','o','o','o','o','X','X',' ',' ','o','0',' '},
-	{' ',' ',' ','X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ','X','X',' '},
-	{' ',' ',' ',' ',' ',' ','X','X',' ',' ',' ',' ','X','X',' ',' ',' ',' ',' ','o',' ','X','X',' '},
-	{'X','X',' ',' ',' ',' ','X','X',' ',' ',' ',' ','X','X',' ',' ',' ',' ',' ','o',' ',' ',' ',' '},
-	{'X','X',' ',' ',' ',' ','X','X',' ',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
-	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
-	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
-	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
-	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
-	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
-	{'o',' ','X','X','X',' ',' ',' ',' ',' ','o','o','X','X',' ',' ',' ',' ','o',' ',' ',' ',' ','o'},
-	{'o',' ','X','X','X',' ',' ',' ',' ',' ','o','o','X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
+	{'A',' ',' ','X','X',' ','o','0','o',' ',' ',' ','o','o','o',' ','X','X','X',' ',' ','o','0','o'},
+	{' ',' ',' ','X','X',' ',' ',' ',' ',' ',' ',' ','o','o','o',' ','X','X','X',' ',' ',' ',' ',' '},
+	{' ',' ',' ','X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X',' ',' '},
+	{' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','o',' ','X','X',' ','o',' ','0',' ',' ','X','X',' ',' '},
+	{'X','X',' ',' ',' ',' ',' ','X','X',' ','0',' ','X','X',' ',' ',' ',' ','o',' ','X','X',' ','o'},
+	{'X','X',' ',' ',' ',' ',' ','X','X',' ','o',' ',' ',' ',' ','o','X','X',' ',' ',' ',' ',' ','o'},
+	{'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','0',' ',' ',' ',' ','o'},
+	{' ',' ',' ',' ',' ',' ',' ','o','o',' ',' ',' ',' ',' ',' ','0','X','X',' ',' ',' ',' ',' ','0'},
+	{'0',' ',' ',' ',' ',' ',' ','o','o',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
+	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','o',' ',' ',' ',' ',' ',' ',' ','o'},
+	{'o',' ','X','X','X',' ',' ','X','X',' ','o','o','X','X',' ',' ','0',' ','o',' ',' ',' ',' ','o'},
+	{'o',' ','X','X','X',' ',' ','X','X',' ','o','o','X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
 	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
-	{'0','o','X','o','o','o','o','o','o','X',' ',' ','o','o','o','o','o',' ',' ','o','o','0','o','o'} };
+	{'0','o',' ','o','o','0','o',' ',' ',' ',' ',' ',' ','o','0','o','o',' ',' ','o','o','0','o','o'} };
 
 
 class CP		//--->CurrentPosition
 {	public:
 	int row;
 	int col;
+	bool isHorizantal;	// enemy movement
 		CP(){		}
-		CP(int r,int c)
+		CP(int r,int c,bool flag)
 		{
 			row=r;
 			col=c;
+			isHorizantal=flag;
 		}
 };
+static int counter=0;
+
+int numOfFruits(){
+	int count=0;
+	for(int i=0;i<n;i++){
+		for(int j=0;j<m;j++)
+			if(a[i][j]=='o' || a[i][j]=='0')
+				count++;
+		
+	}
+	return count;
+}
 
 queue<CP> q;
 CP enemyPos;	
@@ -55,7 +67,7 @@ queue<char> tq;			// queue for storing   initial values stored enemy position be
 
 void enemyGen()
 {		
-	int numOfEnemy=n/2;
+	int numOfEnemy=3;
 	int er,ec;				//--->enemy row & col.
 	srand(time(0));			//--->diff rand num generation for each compiltion & set seed to curr time.
 	while(numOfEnemy-- >0){
@@ -66,74 +78,83 @@ void enemyGen()
 			er=rand()%n;
 			ec=rand()%m;
 		}
-		q.push(CP(er,ec));
-		//---> storing initial position of enemy before gen., storing either furit or otherwise(space).
-		//---> order will be maintained so while checking must use pop() .
-		//----> size of q and tq queue will be same.
-		tq.push(a[er][ec]);	
-		a[er][ec]='#';
+		bool isHorizantal;	// even direction
+		if(er%2==0 && ec%2==0){
+			isHorizantal=true;
+		}
+		else
+			isHorizantal=false;
+			
+		q.push(CP(er,ec,isHorizantal));
+									//---> storing initial position of enemy before gen., storing either furit or otherwise(space).
+		tq.push(a[er][ec]);			//---> order will be maintained so while checking must use pop() .
+		a[er][ec]='#';				//----> size of q and tq queue will be same.	
 	}
 }
 
-void delay(int number_of_seconds) 
+void delay(double number_of_seconds) 
 { 
-    // Converting time into milli_seconds 
-    int milli_seconds = 1000 * number_of_seconds; 
-  
-    // Storing start time 
+    double milli_seconds = 1000 * number_of_seconds; 
     clock_t start_time = clock(); 
-  
-    // looping till required time is not acheived 
     while (clock() < start_time + milli_seconds); 
 } 
 
 queue<CP> qtemp;
 queue<char> temp;	// after while loop setting initial pos. values of enemy to queue
-CP obj;
+static bool flag=false;	//--->for back-forth of enemy till obstacle.
+
 void enemyMovement(){
 	while(!q.empty()){
 		enemyPos=q.front();
 		int r=enemyPos.row;
 		int c=enemyPos.col;
-		if(r%2==0 && c%2==0){		//---> horizantal movement.
-			if(a[r][c+1]!='|' && a[r][c+1]!='X' && a[r][c+1]!='A' && a[r][c+1]!='#'){
+		bool isEven=enemyPos.isHorizantal;
+		if(isEven){		//---> horizantal movement.	
+			if(flag==false && c+1<m && a[r][c+1]!='|' && a[r][c+1]!='X' && a[r][c+1]!='A' && a[r][c+1]!='#'){
 				temp.push(a[r][c+1]);
 				a[r][c+1]='#';
-				obj.row=r;
-				obj.col=c+1;
+			    CP obj(r,c+1,true);
 				qtemp.push(obj);
 				a[r][c]=tq.front();
 				tq.pop();
+				if(c+2==m || a[r][c+2]=='X'|| a[r][c+2]=='#')
+					flag=true;
 			}
-			else{
+			else {
 				temp.push(a[r][c-1]);
 				a[r][c-1]='#';
-				obj.row=r;
-				obj.col=c-1;
+				CP obj(r,c-1,true);
 				qtemp.push(obj);
 				a[r][c]=tq.front();
 				tq.pop();
+				if(c-2<0 || a[r][c-2]=='X' || a[r][c-2]=='#')
+					flag=false;
 			}
 		}
 		
 		else{			//---> vertical movement
-			if(a[r-1][c]!='_' && a[r-1][c]!='X' && a[r-1][c]!='A' && a[r-1][c]!='#'){
+			if(flag==false && r-1>=0 && a[r-1][c]!='=' && a[r-1][c]!='X' && a[r-1][c]!='A' && a[r-1][c]!='#'){
 				temp.push(a[r-1][c]);
 				a[r-1][c]='#';
-				obj.row=r-1;
-				obj.col=c;
+				CP obj(r-1,c,false);
 				qtemp.push(obj);
 				a[r][c]=tq.front();
 				tq.pop();
+				if(r-2<0 || a[r-2][c]=='X' || a[r-2][c]=='#'){
+					flag=true;
+				}
 			}
-			else{
+			
+			else {
 				temp.push(a[r+1][c]);
 				a[r+1][c]='#';
-				obj.row=r+1;
-				obj.col=c;
+				CP obj(r+1,c,false);
 				qtemp.push(obj);
 				a[r][c]=tq.front();
 				tq.pop();
+				if(r+2==n || a[r+2][c]=='X' || a[r+2][c]=='#'){
+					flag=false;
+				}
 			}
 		}
 		q.pop();
@@ -152,28 +173,26 @@ void displayGrid()
 {
 	system("cls");
 	cout<<"Score :"<<score<<endl;
-	cout<<"__________________________"<<endl;
+	cout<<"\t\t=========================="<<endl;
 	for(int i=0;i<n;i++) {
-		cout<<"|";
+		cout<<"\t\t|";
 		for(int j=0;j<m;j++)
 		{
 			cout<<a[i][j];
 		}
 		cout<<"|"<<endl;
 	}
-	cout<<"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\""<<endl;
+	cout<<"\t\t=========================="<<endl;
 }
 
-// initial position of actor.
-CP actor(0,0);	
+// initial position of actor.	
+static int ar=0;	// row coords of actor
+static int ac=0;	// cols coords of actor
 int returnValue;
 
 int actorMovement()
 {
 	char press;
-	int ar=actor.row;
-	int ac=actor.col;
-	
 	if(kbhit()){			//---->for actor movement
 		press=getch();
 		if(press=='q')
@@ -181,55 +200,77 @@ int actorMovement()
 			cout<<"\nI QUIT"<<endl;
 			returnValue=-1;
 		}
-		else if(press==' '){
-			system("pause");
-		}
-		else if(press=='a' && ac-1>=0 && a[ar][ac-1]!='X' && a[ar][ac-1]!='#')	//--->move left
+		else if(press=='a' && ac-1>=0 && a[ar][ac-1]!='X')	//--->move left
 		{
-			if(a[ar][ac-1]=='o')
+			if(a[ar][ac-1]=='#')
+				return -1;
+			if(a[ar][ac-1]=='o'){
 				score+=10;
-			else if(a[ar][ac-1]=='0')
-				score+=100;
-				
-			returnValue=1;
+				counter++; 
+			}
+			else if(a[ar][ac-1]=='0'){
+				score+=100;	
+				counter++;
+			}
 			a[ar][ac-1]='A';
 			a[ar][ac]=' ';
-		}
-		else if(press=='d' && ac+1<m && a[ar][ac+1]!='X'&& a[ar][ac+1]!='#')	//--->move right
-		{	
-			if(a[ar][ac+1]=='o')
-				score+=10;
-			else if(a[ar][ac+1]=='0')
-				score+=100;
-				
+			ac--;
 			returnValue=1;
+		}
+		else if(press=='d' && ac+1<m && a[ar][ac+1]!='X')	//--->move right
+		{	
+			if(a[ar][ac+1]=='#')
+				return -1;
+				
+			if(a[ar][ac+1]=='o'){
+				score+=10;
+				counter++;
+			}
+			else if(a[ar][ac+1]=='0'){
+				score+=100;
+				counter++;
+			}
 			a[ar][ac+1]='A';
 			a[ar][ac]=' ';
-		}
-		else if(press=='w' && ar-1>=0 && a[ar-1][ac]!='X' && a[ar-1][ac]!='#')	//--->move up
-		{	
-			if(a[ar-1][ac]=='o')
-				score+=10;
-			else if(a[ar-1][ac]=='0')
-				score+=100;
-				
+			ac++;
 			returnValue=1;
+		}
+		else if(press=='w' && ar-1>=0 && a[ar-1][ac]!='X')	//--->move up
+		{	
+			if( a[ar-1][ac]=='#')
+				return -1;
+			if(a[ar-1][ac]=='o'){
+				score+=10;
+				counter++;
+			}
+			else if(a[ar-1][ac]=='0'){
+				score+=100;
+				counter++;
+			}
 			a[ar-1][ac]='A';
 			a[ar][ac]=' ';
-		}
-		else if(press=='s' && ar+1<n && a[ar+1][ac]!='X' && a[ar+1][ac]!='#')	//--->move DOWN
-		{	
-			if(a[ar+1][ac]=='o')
-				score+=10;
-			else if(a[ar+1][ac]=='0')
-				score+=100;
-				
+			ar--;
 			returnValue=1;
+		}
+		else if(press=='s' && ar+1<n && a[ar+1][ac]!='X')	//--->move DOWN
+		{	
+			if(a[ar+1][ac]=='#')
+				return -1;
+			if(a[ar+1][ac]=='o'){
+				score+=10;
+				counter++;
+			}
+			else if(a[ar+1][ac]=='0'){
+				score+=100;
+				counter++;
+			}
 			a[ar+1][ac]='A';
 			a[ar][ac]=' ';
+			ar++;
+			returnValue=1;
 		}
 		else if(press!='a' || press!='s' || press!='d' || press!='w')
-		{	returnValue=1;	}		// do nothing return game in progress.
+		{	returnValue=1;	}	
 		
 		else{
 			cout<<"\nGAME OVER"<<endl;
@@ -247,11 +288,18 @@ int main()
 {	
 	enemyGen();
 	displayGrid();
+	cout<<"\t\t\tBOARD SETUP...\n";
 	system("pause");
-	int valueReturn;	//==1 gameinProgress_____==-1 gameover.
+	int valueReturn;	
+	int count=numOfFruits();
 	
   while(1)
   {		
+  	if(count==counter){
+  		cout<<"\n\tWINNER WINNER CHICKEN DINNER!!!\n";
+  		cout<<"\t\tTotal Score :"<<score<<endl;
+  		break;
+	}
 	valueReturn=actorMovement();
 	if(valueReturn==-1)		// game over
 	{
@@ -260,7 +308,8 @@ int main()
 	}
 	enemyMovement();		//--> delay will be used for enemy movement.
 	displayGrid();
-	delay(5);			//---> delay in seconds.
+	
+	delay(1);			//---> delay in seconds.
    }
    return 0;
 }
