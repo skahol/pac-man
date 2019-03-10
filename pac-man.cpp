@@ -1,6 +1,6 @@
 #include<iostream>
 using namespace std;
-//#include<windows.h>			//---> to use Sleep(ms) .
+#include<windows.h>			//---> to use Sleep(ms) .
 #include<time.h>			// --> for srand and clock_t in delay()
 #include<queue>
 #include<conio.h>
@@ -68,7 +68,7 @@ queue<char> tq;			// queue for storing   initial values stored enemy position be
 
 void enemyGen()
 {		
-	int numOfEnemy=n/3;
+	int numOfEnemy=n/2;
 	int er,ec;				//--->enemy row & col.
 	srand(time(0));			//--->diff rand num generation for each compiltion & set seed to curr time.
 	while(numOfEnemy-- >0){
@@ -112,40 +112,43 @@ void enemyMovement(){
 		bool isEven=enemyPos.isHorizantal;
 		bool flag=enemyPos.isForward;	
 		if(isEven){		//---> horizantal movement.	
-			if(flag==false && c+1<m && a[r][c+1]!='|' && a[r][c+1]!='X' && a[r][c+1]!='A' && a[r][c+1]!='#'){
+			if(flag==false && c+1<m && a[r][c+1]!='X' && a[r][c+1]!='A' && a[r][c+1]!='#'){
 				temp.push(a[r][c+1]);
-				a[r][c+1]='#';
-			    
+				a[r][c+1]='#';		    
 				a[r][c]=tq.front();
 				tq.pop();
 				if(c+2==m || a[r][c+2]=='X'|| a[r][c+2]=='#')
 					flag=true;
+				if(a[r][c+3]=='#' && c+3<m)					//----> in the case of cross collision of enemies
+					flag=true;	
 				CP obj(r,c+1,isEven,flag);
 				qtemp.push(obj);
 	        }
 			else {
 				temp.push(a[r][c-1]);
 				a[r][c-1]='#';
-			
 				a[r][c]=tq.front();
 				tq.pop();
 				if(c-2<0 || a[r][c-2]=='X' || a[r][c-2]=='#')
 					flag=false;
+				if(a[r][c-3]=='#' && c-3>=0)
+					flag=false;	
 				CP obj(r,c-1,isEven,flag);
 				qtemp.push(obj);
 			}
 		}
 		
 		else{			//---> vertical movement
-			if(flag==false && r-1>=0 && a[r-1][c]!='=' && a[r-1][c]!='X' && a[r-1][c]!='A' && a[r-1][c]!='#'){
+			if(flag==false && r-1>=0  && a[r-1][c]!='X' && a[r-1][c]!='A' && a[r-1][c]!='#'){
 				temp.push(a[r-1][c]);
 				a[r-1][c]='#';
-
 				a[r][c]=tq.front();
 				tq.pop();
 				if(r-2<0 || a[r-2][c]=='X' || a[r-2][c]=='#'){
 					flag=true;
-				}
+			 	}
+			 	if(a[r-3][c]=='#' && r>=0)
+			 		flag=true;
 				CP obj(r-1,c,isEven,flag);
 				qtemp.push(obj);
 			}
@@ -153,12 +156,13 @@ void enemyMovement(){
 			else {
 				temp.push(a[r+1][c]);
 				a[r+1][c]='#';
-
 				a[r][c]=tq.front();
 				tq.pop();
 				if(r+2==n || a[r+2][c]=='X' || a[r+2][c]=='#'){
 					flag=false;
 				}
+				if(a[r+3][c]=='#' && r<n)
+					flag=false;
 				CP obj(r+1,c,isEven,flag);
 				qtemp.push(obj);
 			}
@@ -199,12 +203,12 @@ int returnValue;
 int actorMovement()
 {
 	char press;
-	if(kbhit()){			//---->for actor movement
+	if(kbhit()){		//---->for actor movement
 		press=getch();
 		if(press=='q')
 		{
 			cout<<"\nI QUIT"<<endl;
-			returnValue=-1;
+			return -1;
 		}
 		else if(press=='a' && ac-1>=0 && a[ar][ac-1]!='X')	//--->move left
 		{
@@ -221,7 +225,6 @@ int actorMovement()
 			a[ar][ac-1]='A';
 			a[ar][ac]=' ';
 			ac--;
-			returnValue=1;
 		}
 		else if(press=='d' && ac+1<m && a[ar][ac+1]!='X')	//--->move right
 		{	
@@ -239,7 +242,6 @@ int actorMovement()
 			a[ar][ac+1]='A';
 			a[ar][ac]=' ';
 			ac++;
-			returnValue=1;
 		}
 		else if(press=='w' && ar-1>=0 && a[ar-1][ac]!='X')	//--->move up
 		{	
@@ -256,7 +258,6 @@ int actorMovement()
 			a[ar-1][ac]='A';
 			a[ar][ac]=' ';
 			ar--;
-			returnValue=1;
 		}
 		else if(press=='s' && ar+1<n && a[ar+1][ac]!='X')	//--->move DOWN
 		{	
@@ -273,22 +274,16 @@ int actorMovement()
 			a[ar+1][ac]='A';
 			a[ar][ac]=' ';
 			ar++;
-			returnValue=1;
 		}
-		else if(press!='a' || press!='s' || press!='d' || press!='w'){
-			returnValue=1;	
+		else if(press!='a' || press!='s' || press!='d' || press!='w'){	
 		}	
-		
+	
 		else{
 			cout<<"\nGAME OVER"<<endl;
-			returnValue=-1;
+			return -1;
 		}
 	}
-	else
-	{
-		returnValue=1;
-	}
-	return returnValue;
+	return 1;
 }
 
 int main()
