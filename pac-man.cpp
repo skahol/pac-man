@@ -5,7 +5,7 @@ using namespace std;
 #include<queue>
 #include<conio.h>
 #define n 14
-#define m 24
+#define m 25
 // use of kbhit() defined under conio.h library
 /**********************************************
 	X	 obstacles
@@ -18,20 +18,20 @@ using namespace std;
 ************************************************/
 static int score=0;
 	char a[n][m]={
-	{'A',' ',' ','X','X',' ','o','0','o',' ',' ',' ','o','o','o',' ','X','X','X',' ',' ','o','0','o'},
-	{' ',' ',' ','X','X',' ',' ',' ',' ',' ',' ',' ','o','o','o',' ','X','X','X',' ',' ',' ',' ',' '},
-	{' ',' ',' ','X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X',' ',' '},
-	{' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','o',' ','X','X',' ','o',' ','0',' ',' ','X','X',' ',' '},
-	{'X','X',' ',' ',' ',' ',' ','X','X',' ','0',' ','X','X',' ',' ',' ',' ','o',' ','X','X',' ','o'},
-	{'X','X',' ',' ',' ',' ',' ','X','X',' ','o',' ',' ',' ',' ','o','X','X',' ',' ',' ',' ',' ','o'},
-	{'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','0',' ',' ',' ',' ','o'},
-	{' ',' ',' ',' ',' ',' ',' ','o','o',' ',' ',' ',' ',' ',' ','0','X','X',' ',' ',' ',' ',' ','0'},
-	{'0',' ',' ',' ',' ',' ',' ','o','o',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
-	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','o',' ',' ',' ',' ',' ',' ',' ','o'},
-	{'o',' ','X','X','X',' ',' ','X','X',' ','o','o','X','X',' ',' ','0',' ','o',' ',' ',' ',' ','o'},
-	{'o',' ','X','X','X',' ',' ','X','X',' ','o','o','X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
-	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
-	{'0','o',' ','o','o','0','o',' ',' ',' ',' ',' ',' ','o','0','o','o',' ',' ','o','o','0','o','o'} };
+	{'A',' ',' ','X','X',' ','o','0','o',' ',' ',' ','o','o','o',' ',' ','X','X','X',' ',' ','o','0','o'},
+	{' ',' ',' ','X','X',' ',' ',' ',' ',' ',' ',' ','o','o','o',' ',' ','X','X','X',' ',' ',' ',' ',' '},
+	{' ',' ',' ','X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X',' ',' '},
+	{' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','o',' ','X','X',' ',' ','o',' ','0',' ',' ','X','X',' ',' '},
+	{'X','X',' ',' ',' ',' ',' ','X','X',' ','0',' ','X','X',' ',' ',' ',' ',' ','o',' ','X','X',' ','o'},
+	{'X','X',' ',' ',' ',' ',' ','X','X',' ','o',' ',' ',' ',' ',' ','o','X','X',' ',' ',' ',' ',' ','o'},
+	{'X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','X','X','0',' ',' ',' ',' ','o'},
+	{' ',' ',' ',' ',' ',' ',' ','o','o',' ',' ',' ',' ',' ',' ',' ','0','X','X',' ',' ',' ',' ',' ','0'},
+	{'0',' ',' ',' ',' ',' ',' ','o','o',' ',' ',' ',' ',' ',' ',' ',' ','X','X','o',' ',' ',' ',' ','o'},
+	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','o',' ',' ',' ',' ',' ',' ',' ','o'},
+	{'o',' ','X','X','X',' ',' ','X','X',' ','o','o','X','X',' ',' ',' ','0',' ','o',' ',' ',' ',' ','o'},
+	{'o',' ','X','X','X',' ',' ','X','X',' ','o','o','X','X',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
+	{'o',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
+	{'0','o',' ','o','o','0','o',' ',' ',' ',' ',' ',' ','o','0','o','o',' ',' ',' ','o','o','0','o','o'} };
 
 
 class CP		//--->CurrentPosition
@@ -39,12 +39,13 @@ class CP		//--->CurrentPosition
 	int row;
 	int col;
 	bool isHorizantal;	// enemy movement
+	bool isForward;		// for enemy dir after colliding walls
 		CP(){		}
-		CP(int r,int c,bool flag)
-		{
+		CP(int r,int c,bool flag,bool dir){
 			row=r;
 			col=c;
 			isHorizantal=flag;
+			isForward=dir;
 		}
 };
 static int counter=0;
@@ -67,7 +68,7 @@ queue<char> tq;			// queue for storing   initial values stored enemy position be
 
 void enemyGen()
 {		
-	int numOfEnemy=3;
+	int numOfEnemy=n/3;
 	int er,ec;				//--->enemy row & col.
 	srand(time(0));			//--->diff rand num generation for each compiltion & set seed to curr time.
 	while(numOfEnemy-- >0){
@@ -85,7 +86,7 @@ void enemyGen()
 		else
 			isHorizantal=false;
 			
-		q.push(CP(er,ec,isHorizantal));
+		q.push(CP(er,ec,isHorizantal,false));
 									//---> storing initial position of enemy before gen., storing either furit or otherwise(space).
 		tq.push(a[er][ec]);			//---> order will be maintained so while checking must use pop() .
 		a[er][ec]='#';				//----> size of q and tq queue will be same.	
@@ -101,34 +102,37 @@ void delay(double number_of_seconds)
 
 queue<CP> qtemp;
 queue<char> temp;	// after while loop setting initial pos. values of enemy to queue
-static bool flag=false;	//--->for back-forth of enemy till obstacle.
 
 void enemyMovement(){
-	while(!q.empty()){
+	
+	while(!q.empty()){	
 		enemyPos=q.front();
 		int r=enemyPos.row;
 		int c=enemyPos.col;
 		bool isEven=enemyPos.isHorizantal;
+		bool flag=enemyPos.isForward;	
 		if(isEven){		//---> horizantal movement.	
 			if(flag==false && c+1<m && a[r][c+1]!='|' && a[r][c+1]!='X' && a[r][c+1]!='A' && a[r][c+1]!='#'){
 				temp.push(a[r][c+1]);
 				a[r][c+1]='#';
-			    CP obj(r,c+1,true);
-				qtemp.push(obj);
+			    
 				a[r][c]=tq.front();
 				tq.pop();
 				if(c+2==m || a[r][c+2]=='X'|| a[r][c+2]=='#')
 					flag=true;
-			}
+				CP obj(r,c+1,isEven,flag);
+				qtemp.push(obj);
+	        }
 			else {
 				temp.push(a[r][c-1]);
 				a[r][c-1]='#';
-				CP obj(r,c-1,true);
-				qtemp.push(obj);
+			
 				a[r][c]=tq.front();
 				tq.pop();
 				if(c-2<0 || a[r][c-2]=='X' || a[r][c-2]=='#')
 					flag=false;
+				CP obj(r,c-1,isEven,flag);
+				qtemp.push(obj);
 			}
 		}
 		
@@ -136,25 +140,27 @@ void enemyMovement(){
 			if(flag==false && r-1>=0 && a[r-1][c]!='=' && a[r-1][c]!='X' && a[r-1][c]!='A' && a[r-1][c]!='#'){
 				temp.push(a[r-1][c]);
 				a[r-1][c]='#';
-				CP obj(r-1,c,false);
-				qtemp.push(obj);
+
 				a[r][c]=tq.front();
 				tq.pop();
 				if(r-2<0 || a[r-2][c]=='X' || a[r-2][c]=='#'){
 					flag=true;
 				}
+				CP obj(r-1,c,isEven,flag);
+				qtemp.push(obj);
 			}
 			
 			else {
 				temp.push(a[r+1][c]);
 				a[r+1][c]='#';
-				CP obj(r+1,c,false);
-				qtemp.push(obj);
+
 				a[r][c]=tq.front();
 				tq.pop();
 				if(r+2==n || a[r+2][c]=='X' || a[r+2][c]=='#'){
 					flag=false;
 				}
+				CP obj(r+1,c,isEven,flag);
+				qtemp.push(obj);
 			}
 		}
 		q.pop();
@@ -173,7 +179,7 @@ void displayGrid()
 {
 	system("cls");
 	cout<<"Score :"<<score<<endl;
-	cout<<"\t\t=========================="<<endl;
+	cout<<"\t\t==========================="<<endl;
 	for(int i=0;i<n;i++) {
 		cout<<"\t\t|";
 		for(int j=0;j<m;j++)
@@ -182,7 +188,7 @@ void displayGrid()
 		}
 		cout<<"|"<<endl;
 	}
-	cout<<"\t\t=========================="<<endl;
+	cout<<"\t\t==========================="<<endl;
 }
 
 // initial position of actor.	
@@ -269,8 +275,9 @@ int actorMovement()
 			ar++;
 			returnValue=1;
 		}
-		else if(press!='a' || press!='s' || press!='d' || press!='w')
-		{	returnValue=1;	}	
+		else if(press!='a' || press!='s' || press!='d' || press!='w'){
+			returnValue=1;	
+		}	
 		
 		else{
 			cout<<"\nGAME OVER"<<endl;
